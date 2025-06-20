@@ -13,7 +13,7 @@ export const tradingService = {
     return data || [];
   },
 
-  async createSession(userId: string, name: string, initialCapital: number): Promise<TradingSession> {
+  async createSession(userId: string, name: string, initialCapital: number, sessionType: 'Forex' | 'Crypto'): Promise<TradingSession> {
     const { data, error } = await supabase
       .from('trading_sessions')
       .insert({
@@ -21,6 +21,7 @@ export const tradingService = {
         name,
         initial_capital: initialCapital,
         current_capital: initialCapital,
+        session_type: sessionType,
       })
       .select()
       .single();
@@ -53,6 +54,18 @@ export const tradingService = {
     const { data, error } = await supabase
       .from('trades')
       .insert(trade)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateTrade(tradeId: string, updates: Partial<Trade>): Promise<Trade> {
+    const { data, error } = await supabase
+      .from('trades')
+      .update(updates)
+      .eq('id', tradeId)
       .select()
       .single();
     

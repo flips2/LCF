@@ -14,6 +14,7 @@ export interface TradingSession {
   name: string;
   initial_capital: number;
   current_capital: number;
+  session_type: 'Forex' | 'Crypto';
   created_at: string;
   updated_at: string;
 }
@@ -38,6 +39,18 @@ export interface Trade {
   open_time?: string;
   close_time?: string;
   reason?: 'TP' | 'SL' | 'Early Close' | 'Other';
+  // Forex specific fields
+  leverage?: number;
+  contract_size?: number;
+  // Crypto specific fields
+  futures_symbol?: string;
+  margin_mode?: string;
+  avg_entry_price?: number;
+  avg_close_price?: number;
+  direction?: 'Long' | 'Short';
+  margin_adjustment_history?: string;
+  closing_quantity?: number;
+  realized_pnl?: number;
 }
 
 export interface SessionStats {
@@ -152,4 +165,16 @@ export interface ExtractedTradeData {
   closeTime?: string;
   reason?: string;
   pnlUsd?: number;
+  // Forex specific
+  leverage?: number;
+  contractSize?: number;
+  // Crypto specific
+  futuresSymbol?: string;
+  marginMode?: string;
+  avgEntryPrice?: number;
+  avgClosePrice?: number;
+  direction?: string;
+  marginAdjustmentHistory?: string;
+  closingQuantity?: number;
+  realizedPnl?: number;
 }

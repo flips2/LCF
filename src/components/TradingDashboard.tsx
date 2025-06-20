@@ -25,12 +25,13 @@ import { calculateSessionStats, formatCurrency, formatPercentage } from '../util
 import { exportToJSON, exportToExcel, importFromJSON } from '../utils/exportUtils';
 import SessionCard from './Dashboard/SessionCard';
 import StatsCard from './Dashboard/StatsCard';
-import TradesList from './Dashboard/TradesList';
+import EnhancedTradesList from './Dashboard/EnhancedTradesList';
 import EnhancedPerformanceChart from './Dashboard/EnhancedPerformanceChart';
 import EnhancedChatInterface from './AI/EnhancedChatInterface';
 import SessionSummaryModal from './Dashboard/SessionSummaryModal';
 import SydneyGreeting from './Dashboard/SydneyGreeting';
-import EnhancedTradeForm from './EnhancedTradeForm';
+import ForexTradeForm from './Dashboard/ForexTradeForm';
+import CryptoTradeForm from './Dashboard/CryptoTradeForm';
 import UserAnalyticsPage from './Analytics/UserAnalytics';
 import EnhancedMarketOverview from './MarketOverview/EnhancedMarketOverview';
 import toast from 'react-hot-toast';
@@ -56,6 +57,7 @@ const TradingDashboard: React.FC = () => {
   const [showNewSessionForm, setShowNewSessionForm] = useState(false);
   const [newSessionName, setNewSessionName] = useState('');
   const [newSessionCapital, setNewSessionCapital] = useState('');
+  const [newSessionType, setNewSessionType] = useState<'Forex' | 'Crypto'>('Forex');
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [sessionsCollapsed, setSessionsCollapsed] = useState(false);
 
@@ -133,16 +135,18 @@ const TradingDashboard: React.FC = () => {
       const newSession = await tradingService.createSession(
         user!.id,
         newSessionName,
-        Number(newSessionCapital)
+        Number(newSessionCapital),
+        newSessionType
       );
       
       setSessions([newSession, ...sessions]);
       setCurrentSession(newSession);
       setNewSessionName('');
       setNewSessionCapital('');
+      setNewSessionType('Forex');
       setShowNewSessionForm(false);
       
-      toast.success('Session created successfully');
+      toast.success(`${newSessionType} session created successfully`);
     } catch (error) {
       toast.error('Failed to create session');
     }
@@ -186,6 +190,16 @@ const TradingDashboard: React.FC = () => {
     }
   };
 
+  const handleUpdateTrade = async (tradeId: string, updates: Partial<Trade>) => {
+    try {
+      const updatedTrade = await tradingService.updateTrade(tradeId, updates);
+      setTrades(trades.map(t => t.id === tradeId ? updatedTrade : t));
+      toast.success('Trade updated successfully');
+    } catch (error) {
+      toast.error('Failed to update trade');
+    }
+  };
+
   const handleDeleteTrade = async (tradeId: string) => {
     if (!confirm('Are you sure you want to delete this trade?')) {
       return;
@@ -223,7 +237,8 @@ const TradingDashboard: React.FC = () => {
       const newSession = await tradingService.createSession(
         user!.id,
         `${importData.session.name} (Imported)`,
-        importData.session.initial_capital
+        importData.session.initial_capital,
+        'Forex' // Default to Forex for imported sessions
       );
 
       // Add all trades
@@ -487,6 +502,14 @@ const TradingDashboard: React.FC = () => {
                       step="0.01"
                       required
                     />
+                    <select
+                      value={newSessionType}
+                      onChange={(e) => setNewSessionType(e.target.value as 'Forex' | 'Crypto')}
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Forex">Forex</option>
+                      <option value="Crypto">Crypto</option>
+                    </select>
                     <div className="flex space-x-2">
                       <button
                         type="submit"
@@ -638,14 +661,25 @@ const TradingDashboard: React.FC = () => {
 
                 {/* Trade Form and List */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <EnhancedTradeForm
-                    onAddTrade={handleAddTrade}
-                    sessionId={currentSession.id}
-                  />
+                  {/* Conditional Trade Form based on session type */}
+                  {currentSession.session_type === 'Forex' ? (
+                    <ForexTradeForm
+                      onAddTrade={handleAddTrade}
+                      sessionId={currentSession.id}
+                    />
+                  ) : (
+                    <CryptoTradeForm
+                      onAddTrade={handleAddTrade}
+                      sessionId={currentSession.id}
+                    />
+                  )}
+                  
                   <div className="lg:col-span-1">
-                    <TradesList
+                    <EnhancedTradesList
                       trades={trades}
                       onDeleteTrade={handleDeleteTrade}
+                      onUpdateTrade={handleUpdateTrade}
+                      sessionType={currentSession.session_type}
                     />
                   </div>
                 </div>
@@ -675,7 +709,7 @@ const TradingDashboard: React.FC = () => {
       {currentSession && (
         <SessionSummaryModal
           isOpen={showSummaryModal}
-          onClose={() => setShowSummaryModal(false)}
+          onClose={() => setShowS ummaryModal(false)}
           sessionId={currentSession.id}
           sessionName={currentSession.name}
         />
