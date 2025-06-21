@@ -709,7 +709,7 @@ const TradingDashboard: React.FC = () => {
       {currentSession && (
         <SessionSummaryModal
           isOpen={showSummaryModal}
-          onClose={() => setShowS ummaryModal(false)}
+          onClose={() => setShowSummaryModal(false)}
           sessionId={currentSession.id}
           sessionName={currentSession.name}
         />
